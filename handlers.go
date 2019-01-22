@@ -30,6 +30,10 @@ func usersInfoHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(defaultUsersInfoJSON))
 }
 
+func authHandler(w http.ResponseWriter, r *http.Request) {
+	_, _ = w.Write([]byte(defaultAuthJSON))
+}
+
 func botsInfoHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(defaultBotInfoJSON(r.Context())))
 }
@@ -42,6 +46,25 @@ func listChannelsHandler(w http.ResponseWriter, r *http.Request) {
 // handle groups.list
 func listGroupsHandler(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte(defaultGroupsListJSON))
+}
+
+func fileUploadHandler(w http.ResponseWriter, r *http.Request) {
+	serverAddr := r.Context().Value(ServerBotHubNameContextKey).(string)
+	data, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		msg := fmt.Sprintf("error reading body: %s", err.Error())
+		log.Printf(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	values, vErr := url.ParseQuery(string(data))
+	if vErr != nil {
+		msg := fmt.Sprintf("Unable to decode query params: %s", vErr.Error())
+		log.Printf(msg)
+		http.Error(w, msg, http.StatusInternalServerError)
+		return
+	}
+	go postProcessMessage(values.Get("content"), serverAddr)
 }
 
 // handle chat.postMessage
@@ -61,6 +84,7 @@ func postMessageHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, msg, http.StatusInternalServerError)
 		return
 	}
+	go postProcessMessage(values.Get("text"), serverAddr)
 
 	ts := time.Now().Unix()
 	resp := fmt.Sprintf(`{"channel":"%s","ts":"%d", "text":"%s", "ok": true}`, values.Get("channel"), ts, values.Get("text"))

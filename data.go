@@ -48,6 +48,17 @@ var defaultGroupsListJSON = fmt.Sprintf(`
 		}
 		`, defaultGroupJSON)
 
+var defaultAuthJSON = fmt.Sprintf(`
+		{
+			"ok": true,
+			"url": "https://subarachnoid.slack.com/",
+			"team": "Subarachnoid Workspace",
+			"user": "grace",
+			"team_id": "T12345678",
+			"user_id": "%s"
+		}
+`, defaultNonBotUserID)
+
 var defaultUsersInfoJSON = fmt.Sprintf(`
 	{
 		"ok":true,
